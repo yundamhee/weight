@@ -19,9 +19,16 @@ html,body{margin:0;background:var(--bg);color:var(--text);
 body{padding:calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 24px);max-width:520px;margin:0 auto}
 .card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px}
 h2{font-size:14px;color:var(--sub);font-weight:600;margin:0 0 10px}
-.datebar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.up{color:var(--up)} .down{color:var(--down)}
+
+/* 입력 카드 */
+.datebar{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:12px}
+.datebar h2{font-size:17px;color:var(--text);margin:0}
 .datebar input{background:transparent;border:1px solid var(--line);color:var(--text);
   border-radius:8px;padding:6px 8px;font-size:14px;color-scheme:dark}
+.badge{display:inline-block;margin-top:6px;font-size:13px;font-weight:600;padding:3px 10px;border-radius:999px}
+.badge.ok{background:rgba(95,185,138,.18);color:var(--down)}
+.badge.warn{background:rgba(224,169,91,.16);color:var(--accent2)}
 .entry{display:flex;align-items:center;gap:8px}
 .step{width:56px;height:64px;border-radius:12px;border:1px solid var(--line);background:#1d2935;
   color:var(--text);font-size:20px;font-weight:600}
@@ -30,21 +37,90 @@ h2{font-size:14px;color:var(--sub);font-weight:600;margin:0 0 10px}
   background:#0c131a;color:var(--text);border:1px solid var(--line);border-radius:12px;font-variant-numeric:tabular-nums}
 #w:focus{outline:2px solid var(--accent)}
 #save{width:100%;height:56px;margin-top:12px;border:0;border-radius:12px;background:var(--accent);
-  color:#062420;font-size:18px;font-weight:700}
+  color:#062420;font-size:18px;font-weight:700;transition:background .2s,opacity .2s}
 #save:active{filter:brightness(.9)}
-#msg{text-align:center;font-size:13px;color:var(--accent);height:18px;margin-top:8px}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.stat{background:#1d2935;border-radius:12px;padding:10px 12px}
-.stat .k{font-size:12px;color:var(--sub)}
-.stat .v{font-size:20px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
-.stat .s{font-size:12px;color:var(--sub);margin-top:2px}
-.up{color:var(--up)} .down{color:var(--down)}
+#save.quiet{opacity:.55}
+#save.done{background:#7ee0b0;opacity:1;animation:pop .35s}
+@keyframes pop{0%{transform:scale(.96)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
+#msg{text-align:center;font-size:13px;color:var(--accent2);min-height:18px;margin-top:8px}
+
+/* 저장 완료 연출 */
+#ok{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(6,12,18,.6);
+  opacity:0;pointer-events:none;transition:opacity .2s;z-index:50}
+#ok.show{opacity:1}
+.okbox{background:var(--card);border:1px solid var(--accent);border-radius:24px;padding:28px 40px;text-align:center;
+  transform:scale(.8);transition:transform .25s cubic-bezier(.2,1.4,.4,1)}
+#ok.show .okbox{transform:scale(1)}
+.okc{width:84px;height:84px;border-radius:50%;background:var(--accent);margin:0 auto 14px;display:flex;align-items:center;justify-content:center}
+.okc svg{width:46px;height:46px}
+.okc path{stroke:#062420;stroke-width:5;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;stroke-dashoffset:60}
+#ok.show .okc path{animation:draw .45s .1s forwards ease-out}
+@keyframes draw{to{stroke-dashoffset:0}}
+.okt{font-size:14px;color:var(--sub)}
+.okw{font-size:36px;font-weight:800;font-variant-numeric:tabular-nums}
+.okd{font-size:15px;margin-top:4px;min-height:20px}
+
+/* 최근 3일 */
+.strip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cell{background:#1d2935;border-radius:12px;padding:10px 4px;text-align:center;border:2px solid transparent}
+.cell.sel{border-color:var(--accent)}
+.cell .k{font-size:12px;color:var(--sub)}
+.cell .v{font-size:26px;font-weight:700;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.cell .v.miss{color:var(--sub);font-weight:600}
+.cell .s{font-size:13px;min-height:17px;font-variant-numeric:tabular-nums}
+.cell .s.warn{color:var(--accent2);font-weight:600}
+.cell .s.mute{color:var(--sub)}
+
+/* 추세 */
+.trend{display:flex;align-items:center;gap:14px;border-radius:14px;padding:14px;background:#1d2935;border-left:6px solid var(--sub)}
+.trend .arrow{font-size:46px;line-height:1;font-weight:700;width:58px;text-align:center;color:var(--sub)}
+.trend .big{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.trend .big small{font-size:15px;font-weight:600;margin-left:4px;color:var(--sub)}
+.trend .tsub{font-size:13px;color:var(--sub);margin-top:4px}
+.trend.good{border-color:var(--down);background:rgba(95,185,138,.12)}
+.trend.good .arrow,.trend.good .big{color:var(--down)}
+.trend.bad{border-color:var(--up);background:rgba(224,122,107,.12)}
+.trend.bad .arrow,.trend.bad .big{color:var(--up)}
+
+/* 목표 막대 */
+.gh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.gh b{font-size:30px;font-variant-numeric:tabular-nums}
+.gh span{font-size:14px;color:var(--sub)}
+.gbar{height:16px;border-radius:999px;background:#0c131a;overflow:hidden;border:1px solid var(--line)}
+.gbar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#3a8f87,var(--accent))}
+.gl{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-top:6px}
+.gs{font-size:13px;color:var(--text);margin-top:8px}
+
+/* BMI 막대 */
+.bh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.bh b{font-size:30px;font-variant-numeric:tabular-nums}
+.bh span{font-size:15px;font-weight:700}
+.bmiwrap{position:relative;padding-top:14px}
+.bmibar{display:flex;height:14px;border-radius:999px;overflow:hidden;gap:2px}
+.bmibar i{display:block;height:100%}
+.mk{position:absolute;top:0;transform:translateX(-50%);width:0;height:0;
+  border-left:8px solid transparent;border-right:8px solid transparent;border-top:12px solid #fff}
+.bticks{position:relative;height:16px;margin-top:4px;font-size:11px;color:var(--sub)}
+.bticks span{position:absolute;transform:translateX(-50%)}
+.bn{font-size:13px;color:var(--sub);margin-top:6px}
+.bn b{color:var(--text)}
+
+/* 입력 유도 */
+.hint{color:var(--sub);font-size:14px}
+.hrow{display:flex;gap:8px;margin-top:10px}
+.hrow input{flex:1;min-width:0;background:#0c131a;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:10px;font-size:16px}
+.hrow button{padding:0 18px;border-radius:8px;border:0;background:var(--accent);color:#062420;font-weight:700;font-size:15px}
+
+/* 그래프 */
 .tabs{display:flex;gap:6px;margin-bottom:10px}
 .tabs button{flex:1;padding:8px 0;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--sub);font-size:13px}
 .tabs button.on{background:#1d2935;color:var(--text);border-color:var(--accent)}
-canvas{width:100%;height:220px;display:block}
-.legend{display:flex;gap:14px;font-size:12px;color:var(--sub);margin-top:8px}
+canvas{width:100%;height:230px;display:block}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--sub);margin-top:8px}
 .legend i{display:inline-block;width:10px;height:3px;vertical-align:middle;margin-right:4px;border-radius:2px}
+.legend i.dot{width:9px;height:9px;border-radius:50%;background:#fff;border:2px solid var(--accent);box-sizing:border-box;height:9px;vertical-align:baseline}
+
+/* 기록 목록·설정 */
 table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
 td{padding:8px 4px;border-bottom:1px solid var(--line)}
 td:nth-child(2),td:nth-child(3){text-align:right}
@@ -58,7 +134,7 @@ td.del button{background:none;border:0;color:var(--sub);font-size:16px}
 .btns button,.btns label{flex:1;min-width:100px;padding:10px;border-radius:10px;border:1px solid var(--line);
   background:#1d2935;color:var(--text);font-size:14px;text-align:center}
 details summary{cursor:pointer;color:var(--sub);font-size:14px;font-weight:600}
-.empty{color:var(--sub);font-size:14px;text-align:center;padding:24px 0}
+.empty{color:var(--sub);font-size:14px;text-align:center;padding:16px 0}
 .more{background:none;border:0;color:var(--accent);font-size:13px;width:100%;padding:8px}
 </style>
 </head>
@@ -66,7 +142,10 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px;font-weight:600}
 
 <div class="card">
   <div class="datebar">
-    <h2 style="margin:0">오늘 체중</h2>
+    <div>
+      <h2 id="title">오늘 체중</h2>
+      <div id="badge" class="badge warn"></div>
+    </div>
     <input type="date" id="d">
   </div>
   <div class="entry">
@@ -79,8 +158,23 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px;font-weight:600}
 </div>
 
 <div class="card">
-  <h2>요약</h2>
-  <div class="stats" id="stats"></div>
+  <h2>최근 3일</h2>
+  <div class="strip" id="strip"></div>
+</div>
+
+<div class="card">
+  <h2>추세</h2>
+  <div id="trend"></div>
+</div>
+
+<div class="card">
+  <h2>목표</h2>
+  <div id="goalBox"></div>
+</div>
+
+<div class="card">
+  <h2>BMI</h2>
+  <div id="bmiBox"></div>
 </div>
 
 <div class="card">
@@ -94,6 +188,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px;font-weight:600}
   <div class="legend">
     <span><i style="background:#8a9bab"></i>일일 체중</span>
     <span><i style="background:var(--accent)"></i>7일 이동평균</span>
+    <span><i class="dot"></i> 오늘</span>
     <span id="lgGoal" style="display:none"><i style="background:var(--accent2)"></i>목표</span>
   </div>
 </div>
@@ -110,6 +205,7 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px;font-weight:600}
     <div style="margin-top:12px">
       <div class="row"><label>키 (cm)</label><input id="h" type="number" inputmode="decimal" step="0.1"></div>
       <div class="row"><label>목표 체중 (kg)</label><input id="g" type="number" inputmode="decimal" step="0.1"></div>
+      <div class="row"><label>시작 체중 (kg) · 비우면 첫 기록</label><input id="s" type="number" inputmode="decimal" step="0.1"></div>
       <div class="btns">
         <button id="exp">백업 파일 저장</button>
         <label>백업 불러오기<input id="imp" type="file" accept=".json,.csv,application/json,text/csv" hidden></label>
@@ -122,10 +218,19 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px;font-weight:600}
   </details>
 </div>
 
+<div id="ok" aria-live="polite">
+  <div class="okbox">
+    <div class="okc"><svg viewBox="0 0 50 50"><path d="M12 26 L22 36 L39 15"/></svg></div>
+    <div class="okt" id="okt">저장 완료</div>
+    <div class="okw" id="okw"></div>
+    <div class="okd" id="okd"></div>
+  </div>
+</div>
+
 <script>
 const KEY='weightlog.v1', SKEY='weightlog.settings.v1';
 const $=id=>document.getElementById(id);
-let data=load(), settings=loadS(), range=30, listN=14;
+let data=load(), settings=loadS(), range=30, listN=14, lastToday='';
 
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return {}}}
 function loadS(){try{return JSON.parse(localStorage.getItem(SKEY))||{}}catch(e){return {}}}
@@ -140,13 +245,19 @@ const DAY=864e5;
 const dayDiff=(a,b)=>Math.round((parse(b)-parse(a))/DAY);
 const addDays=(s,n)=>ymd(new Date(parse(s).getTime()+n*DAY));
 const f1=x=>x==null||isNaN(x)?'–':x.toFixed(1);
-const sgn=x=>x==null||isNaN(x)?'–':(x>0?'+':x<0?'−':'±')+Math.abs(x).toFixed(1);
+const sgn=x=>x==null||isNaN(x)?'–':(x>0.049?'+':x<-0.049?'−':'±')+Math.abs(x).toFixed(1);
 const cls=x=>x>0.05?'up':x<-0.05?'down':'';
 const today=()=>ymd(new Date());
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const md=s=>`${+s.slice(5,7)}/${+s.slice(8)}`;
+function relLabel(s){const n=dayDiff(s,today());return n===0?'오늘':n===1?'어제':n===2?'그저께':md(s)}
+function titleFor(s){const n=dayDiff(s,today());return n===0?'오늘':n===1?'어제':n===2?'그저께':`${+s.slice(5,7)}월 ${+s.slice(8)}일`}
 
 function sorted(){return Object.keys(data).sort().map(d=>({d,w:data[d]}))}
+function prevBefore(date){let v=null;for(const r of sorted()){if(r.d<date)v=r.w;else break}return v}
+function recAtOrBefore(rows,date){let v=null;for(const r of rows){if(r.d<=date)v=r;else break}return v}
 
-// 7-day trailing average over calendar days (uses whatever entries exist in the window)
+// 7일 이동평균(달력 기준 7일 창) — 그래프와 추세 계산에만 사용
 function ma7(rows){
   return rows.map((r,i)=>{
     let s=0,n=0;
@@ -154,87 +265,138 @@ function ma7(rows){
     return s/n;
   });
 }
-function valueAtOrBefore(rows,date,key='w'){
-  let v=null;for(const r of rows){if(r.d<=date)v=r[key];else break}return v;
+// 최근 3주 이동평균의 기울기(kg/일)
+function calcSlope(rows){
+  if(rows.length<5)return null;
+  const m=ma7(rows), r2=rows.map((r,i)=>({d:r.d,m:m[i]})), last=r2[r2.length-1];
+  const tr=r2.filter(r=>dayDiff(r.d,last.d)<21);
+  if(tr.length<5||dayDiff(tr[0].d,last.d)<7)return null;
+  const xs=tr.map(r=>dayDiff(tr[0].d,r.d)), ys=tr.map(r=>r.m);
+  const xm=xs.reduce((a,b)=>a+b)/xs.length, ym=ys.reduce((a,b)=>a+b)/ys.length;
+  let nu=0,de=0;xs.forEach((x,i)=>{nu+=(x-xm)*(ys[i]-ym);de+=(x-xm)**2});
+  return de?nu/de:null;
 }
 
+/* ---------- 입력 카드 ---------- */
 function fillInput(){
   const d=$('d').value;
-  if(data[d]!=null){$('w').value=data[d].toFixed(1);return}
-  const rows=sorted().filter(r=>r.d<d);
-  $('w').value=rows.length?rows[rows.length-1].w.toFixed(1):'';
+  if(data[d]!=null)$('w').value=data[d].toFixed(1);
+  else{const p=prevBefore(d);$('w').value=p!=null?p.toFixed(1):''}
+  updateEntry();renderStrip();
+}
+let saveBusy=false;
+function updateEntry(){
+  const d=$('d').value||today(), v=parseFloat($('w').value), s=data[d];
+  const same=s!=null&&!isNaN(v)&&Math.abs(v-s)<0.05;
+  $('title').textContent=titleFor(d)+' 체중';
+  const b=$('badge');
+  if(same){b.textContent=`✓ ${titleFor(d)} 기록 저장됨`;b.className='badge ok'}
+  else if(s!=null){b.textContent='값이 바뀌었어요 · 저장을 눌러야 반영돼요';b.className='badge warn'}
+  else{b.textContent=`${titleFor(d)} 기록 아직 저장 안 됨`;b.className='badge warn'}
+  if(!saveBusy){$('save').textContent=s!=null?'수정 저장':'저장';$('save').classList.toggle('quiet',same)}
 }
 
-function renderStats(){
-  const rows=sorted();
-  if(!rows.length){$('stats').innerHTML='<div class="empty" style="grid-column:1/3">첫 체중을 입력해 보세요</div>';return}
-  const m=ma7(rows); rows.forEach((r,i)=>r.m=m[i]);
-  const last=rows[rows.length-1], prev=rows[rows.length-2];
-  const ma7v=last.m, ma7prev=valueAtOrBefore(rows,addDays(last.d,-7),'m');
-  const ma30prev=valueAtOrBefore(rows,addDays(last.d,-30),'m');
-  const r30=rows.filter(r=>dayDiff(r.d,last.d)<30);
-  const mn=Math.min(...r30.map(r=>r.w)), mx=Math.max(...r30.map(r=>r.w));
-  const all=rows.map(r=>r.w), allMin=Math.min(...all);
-
-  // trend: linear regression of MA over last 21 days → kg/week
-  const tr=rows.filter(r=>dayDiff(r.d,last.d)<21);
-  let slope=null;
-  if(tr.length>=5&&dayDiff(tr[0].d,last.d)>=7){
-    const xs=tr.map(r=>dayDiff(tr[0].d,r.d)), ys=tr.map(r=>r.m);
-    const xm=xs.reduce((a,b)=>a+b)/xs.length, ym=ys.reduce((a,b)=>a+b)/ys.length;
-    let nu=0,de=0;xs.forEach((x,i)=>{nu+=(x-xm)*(ys[i]-ym);de+=(x-xm)**2});
-    slope=de?nu/de:null;
-  }
-
-  const cards=[];
-  cards.push(stat('최근 체중',f1(last.w)+' kg',
-    prev?`전 기록 대비 <span class="${cls(last.w-prev.w)}">${sgn(last.w-prev.w)}</span>`:last.d.slice(5).replace('-','/')));
-  cards.push(stat('7일 평균',f1(ma7v)+' kg',
-    ma7prev!=null?`1주 전 대비 <span class="${cls(ma7v-ma7prev)}">${sgn(ma7v-ma7prev)}</span>`:'데이터 쌓는 중'));
-  cards.push(stat('추세',slope==null?'–':`<span class="${cls(slope*7)}">${sgn(slope*7)}</span> <small style="font-size:13px">kg/주</small>`,
-    ma30prev!=null?`한 달 평균 변화 <span class="${cls(ma7v-ma30prev)}">${sgn(ma7v-ma30prev)}</span>`:'최근 3주 기준'));
-  cards.push(stat('최근 30일 범위',`${f1(mn)}–${f1(mx)}`,`역대 최저 ${f1(allMin)}`));
-
-  if(settings.h){
-    const bmi=ma7v/((settings.h/100)**2);
-    const lab=bmi<18.5?'저체중':bmi<23?'정상':bmi<25?'과체중':'비만';
-    cards.push(stat('BMI',bmi.toFixed(1),`${lab} (국내 기준)`));
-  }
-  if(settings.g){
-    const left=ma7v-settings.g;
-    let eta='목표 달성 🎉';
-    if(Math.abs(left)>=0.1){
-      if(slope&&Math.sign(slope)===-Math.sign(left)){
-        const days=Math.abs(left/slope);
-        eta=days>730?'현재 속도로는 2년+':`예상 ${addDays(last.d,Math.round(days)).replace(/-/g,'.')}`;
-      }else eta='현재 추세는 목표 반대 방향';
+/* ---------- 최근 3일 ---------- */
+function renderStrip(){
+  const sel=$('d').value||today();
+  $('strip').innerHTML=[-2,-1,0].map(k=>{
+    const d=addDays(sel,k), w=data[d], p=prevBefore(d);
+    let v,s;
+    if(w!=null){
+      v=`<div class="v">${f1(w)}</div>`;
+      s=p!=null?`<div class="s ${cls(w-p)}">${sgn(w-p)}</div>`:`<div class="s mute">첫 기록</div>`;
+    }else{
+      v=`<div class="v miss">–</div>`;
+      s=d===today()?`<div class="s warn">미입력</div>`:`<div class="s mute">기록 없음</div>`;
     }
-    cards.push(stat('목표까지',Math.abs(left)<0.1?'도달':`${f1(Math.abs(left))} kg`,eta));
-  }
-  $('stats').innerHTML=cards.join('');
+    return `<div class="cell ${k===0?'sel':''}"><div class="k">${relLabel(d)}</div>${v}${s}</div>`;
+  }).join('');
 }
-function stat(k,v,s){return `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`}
 
+/* ---------- 추세 ---------- */
+function renderTrend(){
+  const rows=sorted(), box=$('trend');
+  const slope=calcSlope(rows);
+  if(slope==null){box.innerHTML='<div class="empty">기록이 5일 이상, 1주일 넘게 쌓이면<br>주간 변화 추세가 나와요</div>';return}
+  const last=rows[rows.length-1], pw=slope*7;
+  const dir=pw>0.1?'up':pw<-0.1?'down':'flat';
+  let tone='';
+  if(dir!=='flat'){
+    const toward=settings.g?((settings.g<last.w&&dir==='down')||(settings.g>last.w&&dir==='up')):dir==='down';
+    tone=toward?'good':'bad';
+  }
+  const arrow={up:'↗',down:'↘',flat:'→'}[dir], word={up:'증가 중',down:'감소 중',flat:'유지 중'}[dir];
+  const base=recAtOrBefore(rows,addDays(last.d,-30));
+  const m30=base&&dayDiff(base.d,addDays(last.d,-30))<=5?` · 30일 전보다 ${sgn(last.w-base.w)}kg`:'';
+  box.innerHTML=`<div class="trend ${tone}"><div class="arrow">${arrow}</div>
+    <div><div class="big">${sgn(pw)}<small>kg / 주</small></div>
+    <div class="tsub">${word} · 최근 3주 기준${m30}</div></div></div>`;
+}
+
+/* ---------- 입력 유도 카드 ---------- */
+const hint=(msg,key,ph)=>`<div class="hint">${msg}<div class="hrow"><input id="in_${key}" type="number" inputmode="decimal" step="0.1" placeholder="${ph}"><button data-hint="${key}">저장</button></div></div>`;
+
+/* ---------- 목표 ---------- */
+function renderGoal(){
+  const box=$('goalBox'), rows=sorted();
+  if(!settings.g){box.innerHTML=hint('목표 체중을 입력하면 달성률 막대가 나와요','g','목표 체중 (kg)');return}
+  if(!rows.length){box.innerHTML='<div class="empty">첫 체중을 입력하면 막대가 나와요</div>';return}
+  const last=rows[rows.length-1], cur=last.w, goal=settings.g, start=settings.s||rows[0].w, total=start-goal;
+  const achieved=Math.abs(total)<0.1?Math.abs(cur-goal)<0.1:(total>0?cur<=goal:cur>=goal);
+  let pct=Math.abs(total)<0.1?(achieved?100:0):(start-cur)/total*100;
+  pct=achieved?100:clamp(Math.round(pct),0,99);
+  const slope=calcSlope(rows), mLast=ma7(rows).slice(-1)[0], left=mLast-goal;
+  let eta;
+  if(achieved)eta='목표 달성 🎉';
+  else if(slope==null)eta='기록이 쌓이면 예상 도달일이 나와요';
+  else if(Math.sign(slope)===-Math.sign(left)){
+    const days=Math.abs(left/slope);
+    eta=days>730?'현재 속도로는 2년 이상 걸려요':`현재 속도면 ${addDays(last.d,Math.round(days)).replace(/-/g,'.')} 즈음 도달`;
+  }else eta='최근 추세가 목표와 반대 방향이에요';
+  box.innerHTML=`<div class="gh"><b>${pct}%</b><span>${achieved?'달성':f1(Math.abs(cur-goal))+' kg 남음'}</span></div>
+    <div class="gbar"><i style="width:${pct}%"></i></div>
+    <div class="gl"><span>시작 ${f1(start)}${settings.s?'':' (첫 기록)'}</span><span>목표 ${f1(goal)}</span></div>
+    <div class="gs">${eta}</div>`;
+}
+
+/* ---------- BMI ---------- */
+const ZONES=[{n:'저체중',a:15,b:18.5,c:'#5b9bd5'},{n:'정상',a:18.5,b:23,c:'#4fb3a9'},{n:'과체중',a:23,b:25,c:'#e0a95b'},{n:'비만',a:25,b:35,c:'#e07a6b'}];
+function renderBmi(){
+  const box=$('bmiBox'), rows=sorted();
+  if(!settings.h){box.innerHTML=hint('키를 입력하면 BMI와 정상 범위가 나와요','h','키 (cm)');return}
+  if(!rows.length){box.innerHTML='<div class="empty">첫 체중을 입력하면 BMI가 나와요</div>';return}
+  const h=settings.h/100, w=rows[rows.length-1].w, bmi=w/(h*h);
+  const z=ZONES.find(z=>bmi<z.b)||ZONES[3];
+  const pos=clamp((bmi-15)/20,0,1)*100;
+  const seg=ZONES.map(z=>`<i style="flex:${z.b-z.a};background:${z.c}"></i>`).join('');
+  const tick=v=>`<span style="left:${(v-15)/20*100}%">${v}</span>`;
+  box.innerHTML=`<div class="bh"><b>${bmi.toFixed(1)}</b><span style="color:${z.c}">${z.n}</span></div>
+    <div class="bmiwrap"><div class="mk" style="left:${pos}%"></div><div class="bmibar">${seg}</div></div>
+    <div class="bticks">${tick(18.5)}${tick(23)}${tick(25)}</div>
+    <div class="bn">정상 체중 범위 <b>${(18.5*h*h).toFixed(1)} – ${(22.9*h*h).toFixed(1)} kg</b> (키 ${settings.h}cm)</div>`;
+}
+
+/* ---------- 그래프 ---------- */
 function renderChart(){
   const cv=$('c'),dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;
   cv.width=W*dpr;cv.height=H*dpr;const x=cv.getContext('2d');x.scale(dpr,dpr);x.clearRect(0,0,W,H);
-  let rows=sorted();
   $('lgGoal').style.display=settings.g?'':'none';
-  if(rows.length<2){x.fillStyle='#8a9bab';x.font='14px sans-serif';x.textAlign='center';
-    x.fillText('기록이 2개 이상 쌓이면 그래프가 나와요',W/2,H/2);return}
+  const msg=t=>{x.fillStyle='#8a9bab';x.font='14px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(t,W/2,H/2)};
+  let rows=sorted();
+  if(rows.length<2){msg('기록이 2개 이상 쌓이면 그래프가 나와요');return}
   const m=ma7(rows);rows.forEach((r,i)=>r.m=m[i]);
-  const end=rows[rows.length-1].d;
+  const tdy=today(), last=rows[rows.length-1].d, end=tdy>last?tdy:last;   // 오른쪽 끝은 항상 오늘
   if(range)rows=rows.filter(r=>dayDiff(r.d,end)<range);
+  if(!rows.length){msg('이 기간에는 기록이 없어요');return}
   const start=range?addDays(end,-(range-1)):rows[0].d;
   const span=Math.max(1,dayDiff(start,end));
   let lo=Math.min(...rows.map(r=>Math.min(r.w,r.m))),hi=Math.max(...rows.map(r=>Math.max(r.w,r.m)));
   if(settings.g&&settings.g>lo-3&&settings.g<hi+3){lo=Math.min(lo,settings.g);hi=Math.max(hi,settings.g)}
   if(hi-lo<1){const c=(hi+lo)/2;lo=c-.5;hi=c+.5}
-  const padv=(hi-lo)*.12;lo-=padv;hi+=padv;
-  const L=38,R=8,T=8,B=22,pw=W-L-R,ph=H-T-B;
+  const padv=(hi-lo)*.14;lo-=padv;hi+=padv;
+  const L=38,R=12,T=14,B=22,pw=W-L-R,ph=H-T-B;
   const X=d=>L+dayDiff(start,d)/span*pw, Y=v=>T+(hi-v)/(hi-lo)*ph;
 
-  // grid
   x.strokeStyle='#243241';x.fillStyle='#8a9bab';x.font='11px sans-serif';x.lineWidth=1;
   const stepv=niceStep((hi-lo)/4);
   x.textAlign='right';x.textBaseline='middle';
@@ -243,20 +405,40 @@ function renderChart(){
     x.fillText(stepv<1?v.toFixed(1):v.toFixed(0),L-6,Y(v));
   }
   x.textAlign='center';x.textBaseline='top';
-  const nt=4;for(let i=0;i<=nt;i++){const d=addDays(start,Math.round(span*i/nt));
-    const[_,mo,da]=d.split('-');x.fillText(`${+mo}/${+da}`,Math.min(Math.max(X(d),L+12),W-R-12),H-B+6)}
+  for(let i=0;i<=4;i++){const d=addDays(start,Math.round(span*i/4));
+    x.fillText(md(d),Math.min(Math.max(X(d),L+12),W-R-12),H-B+6)}
 
   if(settings.g){x.strokeStyle='#e0a95b';x.setLineDash([5,4]);x.beginPath();
     x.moveTo(L,Y(settings.g));x.lineTo(W-R,Y(settings.g));x.stroke();x.setLineDash([])}
 
-  // daily points + thin line
   x.strokeStyle='rgba(138,155,171,.35)';x.lineWidth=1;x.beginPath();
   rows.forEach((r,i)=>i?x.lineTo(X(r.d),Y(r.w)):x.moveTo(X(r.d),Y(r.w)));x.stroke();
   x.fillStyle='#8a9bab';const rad=rows.length>120?1.5:2.5;
   rows.forEach(r=>{x.beginPath();x.arc(X(r.d),Y(r.w),rad,0,7);x.fill()});
-  // MA line
   x.strokeStyle='#4fb3a9';x.lineWidth=2.5;x.lineJoin='round';x.beginPath();
   rows.forEach((r,i)=>i?x.lineTo(X(r.d),Y(r.m)):x.moveTo(X(r.d),Y(r.m)));x.stroke();
+
+  // 오늘 강조
+  if(dayDiff(start,tdy)>=0&&dayDiff(tdy,end)>=0){
+    const tx=X(tdy);
+    if(data[tdy]!=null){
+      const ty=Y(data[tdy]);
+      x.fillStyle='rgba(255,255,255,.2)';x.beginPath();x.arc(tx,ty,12,0,7);x.fill();
+      x.fillStyle='#fff';x.strokeStyle='#4fb3a9';x.lineWidth=3;x.beginPath();x.arc(tx,ty,6,0,7);x.fill();x.stroke();
+      const below=ty-26<T;
+      x.font='bold 12px sans-serif';x.textBaseline='middle';
+      const lb=`오늘 ${f1(data[tdy])}`, lw=x.measureText(lb).width+14, ly=below?ty+24:ty-22;
+      let lx=tx-lw/2; lx=Math.min(lx,W-R+4-lw); lx=Math.max(lx,L);
+      x.fillStyle='rgba(23,33,44,.92)';x.strokeStyle='#4fb3a9';x.lineWidth=1;
+      x.beginPath();x.roundRect(lx,ly-11,lw,22,8);x.fill();x.stroke();
+      x.fillStyle='#fff';x.textAlign='center';x.fillText(lb,lx+lw/2,ly);
+    }else{
+      x.strokeStyle='#e0a95b';x.lineWidth=1.5;x.setLineDash([4,4]);
+      x.beginPath();x.moveTo(tx,T);x.lineTo(tx,H-B);x.stroke();x.setLineDash([]);
+      x.font='bold 12px sans-serif';x.fillStyle='#e0a95b';x.textAlign='right';x.textBaseline='top';
+      x.fillText('오늘 미입력',tx-6,T+2);
+    }
+  }
 }
 function niceStep(raw){const p=10**Math.floor(Math.log10(raw)),n=raw/p;return (n<1.5?1:n<3?2:n<7?5:10)*p}
 
@@ -271,31 +453,55 @@ function renderList(){
   $('more').style.display=rows.length>listN?'':'none';
 }
 
-function renderAll(){renderStats();renderChart();renderList()}
+function renderAll(){updateEntry();renderStrip();renderTrend();renderGoal();renderBmi();renderChart();renderList()}
 
-// events
-$('d').value=today();$('d').max=today();
-$('d').onchange=fillInput;
+/* ---------- 저장 피드백 ---------- */
+function celebrate(w,prev,d){
+  $('okt').textContent=`${titleFor(d)} 체중 저장 완료`;
+  $('okw').textContent=w.toFixed(1)+' kg';
+  const diff=prev!=null?w-prev:null;
+  const el=$('okd');
+  el.textContent=diff==null?'첫 기록이에요':`이전 기록보다 ${sgn(diff)} kg`;
+  el.className='okd '+(diff==null?'':cls(diff));
+  const ok=$('ok');ok.classList.add('show');
+  clearTimeout(celebrate.t);celebrate.t=setTimeout(()=>ok.classList.remove('show'),1500);
+  try{if(navigator.vibrate)navigator.vibrate([40,60,90])}catch(e){}
+}
+function flash(t){$('msg').textContent=t;clearTimeout(flash.t);flash.t=setTimeout(()=>$('msg').textContent='',2500)}
+
+/* ---------- 이벤트 ---------- */
+$('d').value=today();$('d').max=today();lastToday=today();
+$('d').onchange=()=>{if(!$('d').value)$('d').value=today();fillInput()};
 document.querySelectorAll('.step').forEach(b=>b.onclick=()=>{
-  const v=parseFloat($('w').value)||0;$('w').value=Math.max(0,v+parseFloat(b.dataset.s)).toFixed(1)});
+  const v=parseFloat($('w').value)||0;$('w').value=Math.max(0,v+parseFloat(b.dataset.s)).toFixed(1);updateEntry()});
+$('w').addEventListener('input',updateEntry);
 $('save').onclick=()=>{
   const v=parseFloat($('w').value),d=$('d').value;
   if(!(v>20&&v<300)){flash('체중을 확인해 주세요');return}
   if(!d){flash('날짜를 선택해 주세요');return}
-  const existed=data[d]!=null;
-  data[d]=Math.round(v*10)/10;persist();renderAll();
-  flash(existed?'수정했어요 ✓':'저장했어요 ✓');$('w').blur();
+  const prev=prevBefore(d);
+  data[d]=Math.round(v*10)/10;persist();
+  saveBusy=true;const sb=$('save');sb.textContent='✓ 저장 완료';sb.classList.remove('quiet');sb.classList.add('done');
+  setTimeout(()=>{saveBusy=false;sb.classList.remove('done');updateEntry()},1800);
+  renderAll();$('w').blur();celebrate(data[d],prev,d);
 };
 $('w').addEventListener('keydown',e=>{if(e.key==='Enter')$('save').click()});
-function flash(t){$('msg').textContent=t;clearTimeout(flash.t);flash.t=setTimeout(()=>$('msg').textContent='',2500)}
+$('ok').onclick=()=>$('ok').classList.remove('show');
 $('tabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;
   document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));range=+b.dataset.r;renderChart()};
 $('list').onclick=e=>{const d=e.target.dataset.del;if(!d)return;
   if(confirm(`${d} 기록(${f1(data[d])} kg)을 삭제할까요?`)){delete data[d];persist();renderAll();fillInput()}};
 $('more').onclick=()=>{listN+=30;renderList()};
-$('h').value=settings.h||'';$('g').value=settings.g||'';
-$('h').onchange=()=>{settings.h=parseFloat($('h').value)||null;persistS();renderAll()};
-$('g').onchange=()=>{settings.g=parseFloat($('g').value)||null;persistS();renderAll()};
+
+function syncSettingsInputs(){$('h').value=settings.h||'';$('g').value=settings.g||'';$('s').value=settings.s||''}
+syncSettingsInputs();
+['h','g','s'].forEach(k=>$(k).onchange=()=>{settings[k]=parseFloat($(k).value)||null;persistS();renderAll()});
+document.addEventListener('click',e=>{
+  const k=e.target.dataset&&e.target.dataset.hint;if(!k)return;
+  const v=parseFloat($('in_'+k).value);
+  if(!(v>0)){$('in_'+k).focus();return}
+  settings[k]=v;persistS();syncSettingsInputs();renderAll();
+});
 
 function download(name,text,type){const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
@@ -311,12 +517,19 @@ $('imp').onchange=async e=>{
   if(!n){alert('불러올 기록이 없어요');return}
   if(!confirm(`${n}개 기록을 불러옵니다. 같은 날짜는 백업 값으로 덮어씁니다. 계속할까요?`))return;
   for(const k in inc)if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&typeof inc[k]==='number')data[k]=inc[k];
-  if(s){settings={...settings,...s};$('h').value=settings.h||'';$('g').value=settings.g||'';persistS()}
-  persist();renderAll();fillInput();e.target.value='';alert('불러오기 완료');
+  if(s){settings={...settings,...s};syncSettingsInputs();persistS()}
+  persist();fillInput();renderAll();e.target.value='';alert('불러오기 완료');
 };
 window.addEventListener('resize',renderChart);
-document.addEventListener('visibilitychange',()=>{ // 앱을 다음날 다시 열면 날짜 갱신
-  if(!document.hidden&&$('d').value<today()&&data[$('d').value]!=null){$('d').value=today();$('d').max=today();fillInput()}});
+// 앱을 켜 둔 채 날짜가 바뀌면 새 '오늘'로 이동
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden)return;
+  const t=today();
+  if(t!==lastToday){
+    if($('d').value===lastToday)$('d').value=t;
+    lastToday=t;$('d').max=t;fillInput();renderAll();
+  }
+});
 
 fillInput();renderAll();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
