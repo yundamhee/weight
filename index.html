@@ -157,6 +157,49 @@ td.del button{background:none;border:0;color:var(--sub);font-size:16px}
 details summary{cursor:pointer;color:var(--sub);font-size:14px;font-weight:600}
 .empty{color:var(--sub);font-size:14px;text-align:center;padding:16px 0}
 .more{background:none;border:0;color:var(--accent);font-size:13px;width:100%;padding:8px}
+
+/* ===== 261029 개편 ===== */
+/* BMI */
+.bh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.bl{display:flex;align-items:baseline;gap:10px}
+.bl b{font-size:32px;font-variant-numeric:tabular-nums}
+.zn{font-size:19px;font-weight:800}
+.std{font-size:11px;color:var(--sub)}
+.bmibar{height:26px;gap:2px}
+.bmibar i{display:block;height:100%;font-style:normal;font-size:12px;font-weight:800;color:#0c1a22;text-align:center;line-height:26px;white-space:nowrap}
+/* 마라톤 */
+.mh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.eta{margin-top:12px;border-top:1px solid var(--line);padding-top:6px}
+.er{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;font-variant-numeric:tabular-nums}
+.er span{font-size:14px;color:var(--sub)}
+.er b{font-size:18px}
+.er b.done{color:var(--down)}
+.er b.na{font-size:13px;color:var(--sub);font-weight:500}
+/* 추세 */
+.trend{border-left:6px solid var(--tc,var(--sub));background:color-mix(in srgb,var(--tc,#8a9bab) 14%,#1d2935)}
+.trend .arrow{color:var(--tc,var(--sub))}
+.trend .tword{font-size:30px;font-weight:800;line-height:1.15;color:var(--tc,var(--text))}
+/* 목표 */
+.gh{display:block;margin-bottom:8px}
+.gh b{font-size:34px}
+.gu{font-size:18px;font-weight:700;margin-left:4px}
+.grem{font-size:17px;margin-top:10px}
+.grem b{font-size:22px;color:var(--accent)}
+.geta{font-size:15px;font-weight:700;margin-top:6px;color:var(--accent2)}
+.geta.plain{color:var(--sub);font-weight:500;font-size:13px}
+/* 최근 3일: 오늘 비어 있음 강조 + 도장 애니메이션 */
+.cell{position:relative}
+.cell.todo{border:2px dashed var(--accent2);background:rgba(224,169,91,.12);animation:pulse 1.6s ease-in-out infinite}
+.cell.todo .k{color:var(--accent2);font-weight:700}
+.cell .v.todoTxt{font-size:21px;color:var(--accent2);font-weight:800;margin:9px 0 5px}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(224,169,91,.5)}50%{box-shadow:0 0 0 7px rgba(224,169,91,0)}}
+.cell .v.pend{opacity:0}
+.cell .v.stamp{animation:stamp .55s cubic-bezier(.2,1.6,.4,1)}
+@keyframes stamp{0%{transform:scale(1.9);opacity:0}55%{transform:scale(.9);opacity:1}100%{transform:scale(1)}}
+.cell.ring{animation:ring .9s ease-out}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(79,179,169,.8)}100%{box-shadow:0 0 0 16px rgba(79,179,169,0)}}
+.flyer{position:fixed;z-index:60;font-size:36px;font-weight:800;color:#fff;pointer-events:none;
+  text-shadow:0 4px 16px rgba(79,179,169,.7);font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -281,6 +324,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const md=s=>`${+s.slice(5,7)}/${+s.slice(8)}`;
 function relLabel(s){const n=dayDiff(s,today());return n===0?'오늘':n===1?'어제':n===2?'그저께':md(s)}
 const WK='일월화수목금토';
+const dateStr=s=>{const y=+s.slice(0,4);return `${y!==new Date().getFullYear()?y+'년 ':''}${+s.slice(5,7)}월 ${+s.slice(8)}일`};
 const fullDate=s=>`${+s.slice(5,7)}월 ${+s.slice(8)}일 (${WK[parse(s).getDay()]})`;
 function titleFor(s){const n=dayDiff(s,today());return n===0?'오늘':n===1?'어제':n===2?'그저께':`${+s.slice(5,7)}월 ${+s.slice(8)}일`}
 
@@ -317,7 +361,7 @@ function fillInput(){
   else{const p=prevBefore(d);$('w').value=p!=null?p.toFixed(1):''}
   updateEntry();renderStrip();
 }
-let saveBusy=false;
+let saveBusy=false, flyPending=false;
 function updateEntry(){
   const d=$('d').value||today(), v=parseFloat($('w').value), s=data[d];
   const same=s!=null&&!isNaN(v)&&Math.abs(v-s)<0.05;
@@ -340,16 +384,20 @@ function updateEntry(){
 function renderStrip(){
   const sel=$('d').value||today();
   $('strip').innerHTML=[-2,-1,0].map(k=>{
-    const d=addDays(sel,k), w=data[d], p=prevBefore(d);
-    let v,s;
+    const d=addDays(sel,k), w=data[d], p=prevBefore(d), isSel=k===0, isT=d===today();
+    let v,s,todo='';
     if(w!=null){
-      v=`<div class="v">${f1(w)}</div>`;
+      v=`<div class="v${isSel&&flyPending?' pend':''}">${f1(w)}</div>`;
       s=p!=null?`<div class="s ${cls(w-p)}">${sgn(w-p)}</div>`:`<div class="s mute">첫 기록</div>`;
+    }else if(isSel){
+      todo=' todo';
+      v=`<div class="v todoTxt">입력 전</div>`;
+      s=isT?`<div class="s warn">비어 있어요!</div>`:`<div class="s warn">기록 없음</div>`;
     }else{
       v=`<div class="v miss">–</div>`;
-      s=d===today()?`<div class="s warn">미입력</div>`:`<div class="s mute">기록 없음</div>`;
+      s=`<div class="s mute">기록 없음</div>`;
     }
-    return `<div class="cell ${k===0?'sel':''}"><div class="k">${relLabel(d)}</div>${v}${s}</div>`;
+    return `<div class="cell${isSel?' sel':''}${todo}"><div class="k">${relLabel(d)}</div>${v}${s}</div>`;
   }).join('');
 }
 
@@ -358,19 +406,17 @@ function renderTrend(){
   const rows=sorted(), box=$('trend');
   const slope=calcSlope(rows);
   if(slope==null){box.innerHTML='<div class="empty">기록이 5일 이상, 1주일 넘게 쌓이면<br>주간 변화 추세가 나와요</div>';return}
-  const last=rows[rows.length-1], pw=slope*7;
-  const dir=pw>0.1?'up':pw<-0.1?'down':'flat';
-  let tone='';
-  if(dir!=='flat'){
-    const toward=settings.g?((settings.g<last.w&&dir==='down')||(settings.g>last.w&&dir==='up')):dir==='down';
-    tone=toward?'good':'bad';
-  }
-  const arrow={up:'↗',down:'↘',flat:'→'}[dir], word={up:'증가 중',down:'감소 중',flat:'유지 중'}[dir];
+  const last=rows[rows.length-1], pw=slope*7, mag=Math.abs(pw), dir=pw>0?'up':'down';
+  const lvl=mag<0.1?0:mag<0.4?1:2;                       // 0 유지 · 1 약간 · 2 뚜렷
+  const toward=settings.g?((settings.g<last.w&&dir==='down')||(settings.g>last.w&&dir==='up')):dir==='down';
+  const color=lvl===0?'#8aa6c1':toward?(lvl===2?'#5fb98a':'#8fd3a8'):(lvl===2?'#e07a6b':'#e0a95b');
+  const word=lvl===0?'유지 중!':(lvl===1?'약간 ':'')+(dir==='up'?'증가 중!':'감소 중!');
+  const arrow=lvl===0?'→':dir==='up'?'↗':'↘';
   const base=recAtOrBefore(rows,addDays(last.d,-30));
   const m30=base&&dayDiff(base.d,addDays(last.d,-30))<=5?` · 30일 전보다 ${sgn(last.w-base.w)}kg`:'';
-  box.innerHTML=`<div class="trend ${tone}"><div class="arrow">${arrow}</div>
-    <div><div class="big">${sgn(pw)}<small>kg / 주</small></div>
-    <div class="tsub">${word} · 최근 3주 기준${m30}</div></div></div>`;
+  box.innerHTML=`<div class="trend" style="--tc:${color}"><div class="arrow">${arrow}</div>
+    <div><div class="tword">${word}</div>
+    <div class="tsub">주 ${sgn(pw)} kg · 최근 3주 기준${m30}</div></div></div>`;
 }
 
 /* ---------- 입력 유도 카드 ---------- */
@@ -386,17 +432,19 @@ function renderGoal(){
   let pct=Math.abs(total)<0.1?(achieved?100:0):(start-cur)/total*100;
   pct=achieved?100:clamp(Math.round(pct),0,99);
   const slope=calcSlope(rows), mLast=ma7(rows).slice(-1)[0], left=mLast-goal;
-  let eta;
+  let eta,etaCls='';
   if(achieved)eta='목표 달성 🎉';
-  else if(slope==null)eta='기록이 쌓이면 예상 도달일이 나와요';
+  else if(slope==null){eta='기록이 쌓이면 달성 예상일이 나와요';etaCls=' plain'}
   else if(Math.sign(slope)===-Math.sign(left)){
     const days=Math.abs(left/slope);
-    eta=days>730?'현재 속도로는 2년 이상 걸려요':`현재 속도면 ${addDays(last.d,Math.round(days)).replace(/-/g,'.')} 즈음 도달`;
-  }else eta='최근 추세가 목표와 반대 방향이에요';
-  box.innerHTML=`<div class="gh"><b>${pct}%</b><span>${achieved?'달성':f1(Math.abs(cur-goal))+' kg 남음'}</span></div>
+    if(days>730){eta='달성까지 2년 이상 걸려요';etaCls=' plain'}
+    else eta=`📅 ${dateStr(addDays(last.d,Math.round(days)))} 달성 예상!`;
+  }else{eta='최근 추세가 목표와 반대 방향이에요';etaCls=' plain'}
+  box.innerHTML=`<div class="gh"><b>${pct}%</b><span class="gu">달성</span></div>
     <div class="gbar"><i style="width:${pct}%"></i></div>
     <div class="gl"><span>시작 ${f1(start)}${settings.s?'':' (첫 기록)'}</span><span>목표 ${f1(goal)}</span></div>
-    <div class="gs">${eta}</div>`;
+    ${achieved?'':`<div class="grem">목표 ${f1(goal)}kg까지 <b>${f1(Math.abs(cur-goal))} kg</b> 남음</div>`}
+    <div class="geta${etaCls}">${eta}</div>`;
 }
 
 /* ---------- 마라톤: 키 − 체중 ---------- */
@@ -404,44 +452,43 @@ function renderMarathon(){
   const box=$('mrBox'), rows=sorted();
   if(!settings.h){box.innerHTML=hint('키를 입력하면 키 − 체중 값이 나와요','h','키 (cm)');return}
   if(!rows.length){box.innerHTML='<div class="empty">첫 체중을 입력하면 값이 나와요</div>';return}
-  const H=settings.h, last=rows[rows.length-1], w=last.w, v=H-w;
-  const t100=H-100, t110=H-110;
-  const lo=Math.min(80,Math.floor(v/10)*10), hi=120, span=hi-lo;
-  const pos=x=>clamp((x-lo)/span,0,1)*100;
-  const COL={low:'#e0a95b',ok:'#5fb98a',best:'#5b9bd5'};
-  const st=v>=110?{t:'이상적 구간 🎉',c:COL.best}:v>=100?{t:'완주권 도달 ✅',c:COL.ok}:{t:`100까지 ${(100-v).toFixed(1)} 남음`,c:COL.low};
-  const seg=[[lo,100,COL.low],[100,110,COL.ok],[110,hi,COL.best]].map(([a,b,c])=>`<i style="flex:${b-a};background:${c}"></i>`).join('');
-  const tick=(x,t)=>`<span style="left:${pos(x)}%">${t}</span>`;
+  const H=settings.h, last=rows[rows.length-1], w=last.w, v=H-w, t100=H-100, t110=H-110;
+  const LO=Math.min(80,Math.floor(v/10)*10), HI=120;
+  // 글자가 들어가도록 구간 폭은 고정(40/30/30%)하고, 구간 안에서만 비례해 위치를 계산
+  const pos=x=>x<100?clamp((x-LO)/(100-LO),0,1)*40:x<110?40+(x-100)/10*30:70+clamp((x-110)/(HI-110),0,1)*30;
+  const Z=[{n:'도전 중',c:'#e0a95b',w:40},{n:'양호',c:'#5fb98a',w:30},{n:'매우 좋음',c:'#5b9bd5',w:30}];
+  const st=v>=110?{t:'매우 좋음 🎉',c:Z[2].c}:v>=100?{t:'양호 ✅',c:Z[1].c}:{t:`100까지 ${(100-v).toFixed(1)} 남음`,c:Z[0].c};
+  const seg=Z.map(z=>`<i style="flex:${z.w};background:${z.c}">${z.n}</i>`).join('');
   const slope=calcSlope(rows), mLast=ma7(rows).slice(-1)[0];
-  let eta='';
-  if(v<100){
-    eta=(slope!=null&&slope<0)?`현재 속도면 ${addDays(last.d,Math.round((mLast-t100)/-slope)).replace(/-/g,'.')} 즈음 100 도달`:'추세가 쌓이면 100 도달 예상일이 나와요';
-  }
-  const line=(lbl,target,goalV)=>{
-    const diff=w-target;
-    return `<div class="mrow"><span>${lbl}</span><span>${diff>0.049?`<b>${diff.toFixed(1)} kg</b> 더 감량 (체중 ${target.toFixed(1)}kg)`:`<b>달성 ✓</b> (체중 ${target.toFixed(1)}kg 이하)`}</span></div>`};
+  const eta=(target)=>{
+    if(mLast<=target||w<=target)return `<b class="done">달성 ✓</b>`;
+    if(slope==null)return `<b class="na">기록이 쌓이면 표시돼요</b>`;
+    if(slope>=0)return `<b class="na">체중이 줄어야 표시돼요</b>`;
+    const days=(mLast-target)/-slope;
+    return days>730?`<b class="na">2년 이상 뒤</b>`:`<b>${dateStr(addDays(last.d,Math.round(days)))}</b>`;
+  };
   box.innerHTML=`<div class="mh"><div><b>${v.toFixed(1)}</b><small>${H} − ${w.toFixed(1)}</small></div><span style="color:${st.c}">${st.t}</span></div>
     <div class="bmiwrap"><div class="mk" style="left:${pos(v)}%"></div><div class="bmibar">${seg}</div></div>
-    <div class="bticks" style="margin-bottom:6px">${tick(100,'100 완주권')}${tick(110,'110 이상적')}</div>
-    ${line('100 달성',t100)}${line('110 달성',t110)}
-    ${eta?`<div class="mrow"><span>예상</span><span>${eta}</span></div>`:''}`;
+    <div class="bticks"><span style="left:40%">100</span><span style="left:70%">110</span></div>
+    <div class="eta"><div class="er"><span>100 달성 예상</span>${eta(t100)}</div>
+    <div class="er"><span>110 달성 예상</span>${eta(t110)}</div></div>`;
 }
 
 /* ---------- BMI ---------- */
-const ZONES=[{n:'저체중',a:15,b:18.5,c:'#5b9bd5'},{n:'정상',a:18.5,b:23,c:'#4fb3a9'},{n:'과체중',a:23,b:25,c:'#e0a95b'},{n:'비만',a:25,b:35,c:'#e07a6b'}];
+const ZONES=[{n:'저체중',a:15,b:18.5,c:'#5b9bd5',w:20},{n:'정상',a:18.5,b:23,c:'#4fb3a9',w:28},{n:'과체중',a:23,b:25,c:'#e0a95b',w:22},{n:'비만',a:25,b:35,c:'#e07a6b',w:30}];
+// 구간 이름이 막대 안에 들어가도록 구간 폭을 고정하고, 구간 안에서만 비례해 위치를 계산
+function bmiPos(b){let acc=0;for(let i=0;i<ZONES.length;i++){const z=ZONES[i];
+  if(b<z.b||i===ZONES.length-1)return acc+clamp((b-z.a)/(z.b-z.a),0,1)*z.w;acc+=z.w}return 100}
 function renderBmi(){
   const box=$('bmiBox'), rows=sorted();
   if(!settings.h){box.innerHTML=hint('키를 입력하면 BMI와 정상 범위가 나와요','h','키 (cm)');return}
   if(!rows.length){box.innerHTML='<div class="empty">첫 체중을 입력하면 BMI가 나와요</div>';return}
   const h=settings.h/100, w=rows[rows.length-1].w, bmi=w/(h*h);
   const z=ZONES.find(z=>bmi<z.b)||ZONES[3];
-  const pos=clamp((bmi-15)/20,0,1)*100;
-  const seg=ZONES.map(z=>`<i style="flex:${z.b-z.a};background:${z.c}"></i>`).join('');
-  const tick=v=>`<span style="left:${(v-15)/20*100}%">${v}</span>`;
-  box.innerHTML=`<div class="bh"><b>${bmi.toFixed(1)}</b><span style="color:${z.c}">${z.n}</span></div>
-    <div class="bmiwrap"><div class="mk" style="left:${pos}%"></div><div class="bmibar">${seg}</div></div>
-    <div class="bticks">${tick(18.5)}${tick(23)}${tick(25)}</div>
-    <div class="bn">정상 체중 범위 <b>${(18.5*h*h).toFixed(1)} – ${(22.9*h*h).toFixed(1)} kg</b> (키 ${settings.h}cm)</div>`;
+  const seg=ZONES.map(z=>`<i style="flex:${z.w};background:${z.c}">${z.n}</i>`).join('');
+  box.innerHTML=`<div class="bh"><div class="bl"><b>${bmi.toFixed(1)}</b><span class="zn" style="color:${z.c}">${z.n}</span></div><span class="std">대한비만학회 기준</span></div>
+    <div class="bmiwrap"><div class="mk" style="left:${bmiPos(bmi)}%"></div><div class="bmibar">${seg}</div></div>
+    <div class="bticks"><span style="left:20%">18.5</span><span style="left:48%">23</span><span style="left:70%">25</span></div>`;
 }
 
 /* ---------- 그래프 ---------- */
@@ -536,7 +583,6 @@ function celebrate(w,prev,d){
   el.className='okd '+(diff==null?'':cls(diff));
   const ok=$('ok');ok.classList.add('show');
   clearTimeout(celebrate.t);celebrate.t=setTimeout(()=>ok.classList.remove('show'),2800);
-  try{if(navigator.vibrate)navigator.vibrate([40,60,90])}catch(e){}
 }
 function flash(t){$('msg').textContent=t;clearTimeout(flash.t);flash.t=setTimeout(()=>$('msg').textContent='',2500)}
 
@@ -564,12 +610,38 @@ $('save').onclick=()=>{
   const v=parseFloat($('w').value),d=$('d').value;
   if(!(v>20&&v<300)){flash('체중을 확인해 주세요');return}
   if(!d){flash('날짜를 선택해 주세요');return}
-  const prev=prevBefore(d);
+  const prev=prevBefore(d), r0=$('w').getBoundingClientRect();
   data[d]=Math.round(v*10)/10;persist();
+  try{if(navigator.vibrate)navigator.vibrate([40,60,90])}catch(e){}
   saveBusy=true;const sb=$('save');sb.textContent='✓ 저장 완료';sb.classList.remove('quiet');sb.classList.add('done');
-  setTimeout(()=>{saveBusy=false;sb.classList.remove('done');updateEntry()},2800);
-  renderAll();$('w').blur();celebrate(data[d],prev,d);
+  setTimeout(()=>{saveBusy=false;sb.classList.remove('done');updateEntry()},3400);
+  flyPending=true;renderAll();$('w').blur();
+  const val=data[d];
+  flyToToday(r0,val,()=>{
+    flyPending=false;
+    const tv=document.querySelector('.cell.sel .v'),cell=document.querySelector('.cell.sel');
+    if(tv){tv.classList.remove('pend');tv.classList.add('stamp')}
+    if(cell)cell.classList.add('ring');
+    setTimeout(()=>{if(tv)tv.classList.remove('stamp');if(cell)cell.classList.remove('ring')},1000);
+    setTimeout(()=>celebrate(val,prev,d),450);
+  });
 };
+function flyToToday(r0,val,done){
+  let fired=false;const fin=()=>{if(!fired){fired=true;done()}};
+  const tv=document.querySelector('.cell.sel .v');
+  if(!tv||!r0||!tv.animate){fin();return}
+  const r1=tv.getBoundingClientRect();
+  if(r1.bottom<0||r1.top>innerHeight){fin();return}              // 칸이 화면 밖이면 생략
+  const f=document.createElement('div');f.className='flyer';f.textContent=val.toFixed(1);document.body.appendChild(f);
+  const sx=r0.left+r0.width/2, sy=r0.top+r0.height/2, tx=r1.left+r1.width/2, ty=r1.top+r1.height/2;
+  f.style.left=sx+'px';f.style.top=sy+'px';
+  const a=f.animate([
+    {transform:'translate(-50%,-50%) scale(1)'},
+    {transform:`translate(calc(-50% + ${tx-sx}px),calc(-50% + ${ty-sy}px)) scale(.72)`}
+  ],{duration:650,easing:'cubic-bezier(.3,.1,.2,1)',fill:'forwards'});
+  a.onfinish=()=>{f.remove();fin()};
+  setTimeout(()=>{f.remove();fin()},1200);
+}
 $('w').addEventListener('keydown',e=>{if(e.key==='Enter')$('save').click()});
 $('ok').onclick=()=>$('ok').classList.remove('show');
 $('tabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;
